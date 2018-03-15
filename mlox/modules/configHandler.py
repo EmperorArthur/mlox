@@ -78,7 +78,6 @@ class configHandler():
         except:
             config_logger.warning("\"{0}\" is not a recognized file type!".format(fileType))
 
-
     def read(self):
         """
         Read a configuration file
@@ -162,6 +161,42 @@ class configHandler():
         except IndexError:
             config_logger.error("Configuration file does not have a '[Game Files]' section!")
             return False
+        sections[config_index+1] = out_str
+        file_buffer = reduce(lambda x,y: x+y,sections)
+
+        # Write the modified buffer to the configuration file
+        try:
+            file_handle = open(self.configFile, 'w')
+        except IOError:
+            config_logger.error("Unable to open configuration file: {0}".format(self.configFile))
+            return False
+        file_handle.write(file_buffer)
+        file_handle.close()
+
+        return True
+
+    def _write_openmw(self, list_of_plugins):
+        """
+        Write a list of plugins to an openmw.cfg file
+
+        :return: True on success, or False on failure
+        """
+        # Generate the plugins string
+        out_str = "\n"
+        for i in range(0, len(list_of_plugins)):
+            out_str += "content={plugin}\n".format(plugin=list_of_plugins[i])
+
+        # Open and read a configuration file, splitting the result into multiple sections.
+        try:
+            file_handle = open(self.configFile, 'r')
+        except IOError:
+            config_logger.error("Unable to open configuration file: {0}".format(self.configFile))
+            return False
+        file_buffer = file_handle.read()
+        file_handle.close()
+        lines = file_buffer.split()
+
+
         sections[config_index+1] = out_str
         file_buffer = reduce(lambda x,y: x+y,sections)
 
