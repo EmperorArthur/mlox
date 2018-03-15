@@ -21,6 +21,7 @@ import modules.version as version
 from modules.loadOrder import loadorder
 from modules.translations import dump_translations, _
 
+
 def single_spaced(in_string):
     """
     Convert any instance of more than one space character to a single space in a string
@@ -32,6 +33,7 @@ def single_spaced(in_string):
     tmp_string = re.sub('\n ', '\n', tmp_string)
     return tmp_string.strip()
 
+
 class ColorFormatConsole(logging.Formatter):
     """Color code the logging information on Unix terminals"""
     levels = {
@@ -41,14 +43,17 @@ class ColorFormatConsole(logging.Formatter):
         'ERROR'    : '\x1b[0;30;41m',  #Red (ish)
         'CRITICAL' : '\x1b[0;30;41m'   #Red (ish)
     }
+
     def __init__(self, msg):
         logging.Formatter.__init__(self, msg)
+
     def format(self, record):
-        return self.levels[record.levelname] + logging.Formatter.format(self, record) +'\x1b[0m'
+        return self.levels[record.levelname] + logging.Formatter.format(self, record) + '\x1b[0m'
 
 
 class ShowTranslations(argparse.Action):
     """Dump the translation dictionary for the specified language, then exit."""
+
     def __call__(self, parser, namespace, values, option_string=None):
         dump_translations(values)
         sys.exit(0)
@@ -56,11 +61,13 @@ class ShowTranslations(argparse.Action):
 
 class ListVersions(argparse.Action):
     """List the version information of the current data files, then exit"""
+
     def __call__(self, parser, namespace, values, option_string=None):
         my_loadorder = loadorder()
         my_loadorder.get_data_files()
         print(my_loadorder.listversions())
         sys.exit(0)
+
 
 def command_line_mode(args):
     """Run in command line mode.  This assumes log levels were properly set up beforehand"""
@@ -77,6 +84,7 @@ def command_line_mode(args):
         else:
             my_loadorder.get_active_plugins()
         process_load_order(my_loadorder, args)
+
 
 def process_load_order(a_loadorder, args):
     """
@@ -101,19 +109,20 @@ def process_load_order(a_loadorder, args):
         else:
             print("{0:-^80}".format('[END PROPOSED LOAD ORDER]'))
 
+
 if __name__ == "__main__":
-    #Configure logging from python module
+    # Configure logging from python module
     logging.getLogger('').setLevel(logging.DEBUG)
     color_formatter = ColorFormatConsole('%(levelname)s (%(name)s): %(message)s')
     console_log_stream = logging.StreamHandler()
     console_log_stream.setLevel(logging.INFO)
     console_log_stream.setFormatter(color_formatter)
     logging.getLogger('').addHandler(console_log_stream)
-    #Disable parse debug logging unless the user asks for it (It's so much it actually slows the program down)
+    # Disable parse debug logging unless the user asks for it (It's so much it actually slows the program down)
     logging.getLogger('mlox.parser').setLevel(logging.INFO)
 
     ###
-    #Begin Program Arguments
+    # Begin Program Arguments
     ###
 
     parser = argparse.ArgumentParser(
@@ -133,7 +142,8 @@ if __name__ == "__main__":
             Otherwise, the next time you run Mash, it will undo all the changes in your load order made by mlox.
             """))
 
-    parser.add_argument("-n", "--nodownload", help="Do not automatically download and update the mlox rules.", action="store_true")
+    parser.add_argument("-n", "--nodownload", help="Do not automatically download and update the mlox rules.",
+                        action="store_true")
     parser.add_argument("-v", "--version", help="Print version and exit.", action="version", version=version.about())
 
     parser.add_argument("-a", "--all",
@@ -144,14 +154,15 @@ if __name__ == "__main__":
         action="store_true")
 
     writer_group = parser.add_mutually_exclusive_group()
-    #Check mode is actually the default behavior, so setting it doesn't do anything
-    writer_group.add_argument("-c", "--check", help="Check mode, do not update the load order.  Default Behavior.", action="store_true")
+    # Check mode is actually the default behavior, so setting it doesn't do anything
+    writer_group.add_argument("-c", "--check", help="Check mode, do not update the load order.  Default Behavior.",
+                              action="store_true")
     writer_group.add_argument("-u", "--update", help="Update mode, updates the load order.", action="store_true")
     writer_group.add_argument("-w", "--warningsonly",
-        help="Warnings only, do not display the new load order.\nImplies --check.",
-        action="store_true")
+                              help="Warnings only, do not display the new load order.\nImplies --check.",
+                              action="store_true")
 
-    #The strange double add is to make the exclusive group its own section in the help text
+    # The strange double add is to make the exclusive group its own section in the help text
     verbosity_group = parser.add_argument_group('Verbosity Controls', 'Select ONLY one of these to set how much output to recieve.').add_mutually_exclusive_group()
     verbosity_group.add_argument("-p", "--parsedebug",
         help="Turn on debugging for the rules parser. (This can generate a fair amount of output).\nImplies --debug.",
@@ -190,7 +201,7 @@ if __name__ == "__main__":
         action="store_true")
 
 
-    #Developer arguments.  Not useful unless you're working on mlox internals.
+    # Developer arguments.  Not useful unless you're working on mlox internals.
     developer_group = parser.add_argument_group('Developer Options', 'Options useful only to mlox developers.')
     developer_group.add_argument("-l", "--listversions",
         help=single_spaced("""
@@ -213,7 +224,7 @@ if __name__ == "__main__":
         action=ShowTranslations)
 
     ###
-    #End Program Arguments
+    # End Program Arguments
     ###
 
     # parse command line arguments
@@ -221,7 +232,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logging.debug("Parsed Arguments: %s", pprint.pformat(args))
 
-    #Handle verbosity_group
+    # Handle verbosity_group
     # Want to do this as early as possible so nothing is missed.
     if args.parsedebug:
         logging.getLogger('mlox.parser').setLevel(logging.DEBUG)
@@ -230,7 +241,7 @@ if __name__ == "__main__":
         console_log_stream.setLevel(logging.DEBUG)
     if args.quiet:
         console_log_stream.setLevel(logging.WARNING)
-        #Not printing everything else is handled in process_load_order(...)
+        # Not printing everything else is handled in process_load_order(...)
 
     # Check Python version
     logging.debug(version.version_info())
@@ -246,18 +257,20 @@ if __name__ == "__main__":
         if update_compressed_file(update_file, UPDATE_URL, user_path):
             logging.info('Database updated from {0}'.format(update_file))
 
-    #If no arguments are passed or if explicitly asked to, run the GUI
+    # If no arguments are passed or if explicitly asked to, run the GUI
     noargs = True
     for i in vars(args).values():
         if i:
             noargs = False
     if args.gui or noargs:
         from modules.qtGui import MloxGui
+
         MloxGui().start()
 
     if args.profile:
         import hotshot
         import hotshot.stats
+
         prof = hotshot.Profile("mlox.prof")
         time = prof.runcall(command_line_mode, args=args)
         prof.close()

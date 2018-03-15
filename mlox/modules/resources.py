@@ -4,12 +4,13 @@ import sys
 import base64
 import tempfile
 
+
 def unpack_resource(data):
     """Convert base64 encoded data into a file handle, and a temporary file name to access the data"""
     file_handle = tempfile.NamedTemporaryFile()
     file_handle.write(base64.b64decode(data))
     file_handle.seek(0)
-    return (file_handle,file_handle.name)
+    return (file_handle, file_handle.name)
 
 
 # Paths to resource files

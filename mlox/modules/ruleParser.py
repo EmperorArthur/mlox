@@ -1,4 +1,3 @@
-
 import os
 import re
 import io
@@ -11,8 +10,8 @@ from . import fileFinder
 re_comment = re.compile(r'(?:^|\s);.*$')
 # re_rule matches the start of a rule.
 # TBD: check end-bracket pattern
-re_rule = re.compile(r'^\[(version|order|nearend|nearstart|conflict|note|patch|requires)((?:\s+.[^\]]*)?)\](.*)$', re.IGNORECASE)
-
+re_rule = re.compile(r'^\[(version|order|nearend|nearstart|conflict|note|patch|requires)((?:\s+.[^\]]*)?)\](.*)$',
+                     re.IGNORECASE)
 
 # line for multiline messages
 re_message = re.compile(r'^\s')
@@ -50,7 +49,6 @@ re_indented = re.compile(r'^', re.MULTILINE)
 # Not actually used anywhere
 re_plugin_illegal = re.compile(r'[\"\\/=+<>:;|\^]')
 
-
 version_operators = {'=': True, '<': True, '>': True}
 
 tes3_min_plugin_size = 362
@@ -58,7 +56,7 @@ tes3_min_plugin_size = 362
 parse_logger = logging.getLogger('mlox.parser')
 
 
-def get_version(plugin,data_dir = None):
+def get_version(plugin, data_dir=None):
     """
     Get the version information from a plugin
 
@@ -67,9 +65,9 @@ def get_version(plugin,data_dir = None):
     match = re_filename_version.search(plugin)
     file_ver = match.group(1) if match else None
     desc_ver = None
-    if isinstance(data_dir,str):
+    if isinstance(data_dir, str):
         data_dir = fileFinder.caseless_dirlist(data_dir)
-    if isinstance(data_dir,fileFinder.caseless_dirlist) != False:
+    if isinstance(data_dir, fileFinder.caseless_dirlist) != False:
         desc = plugin_description(data_dir.find_path(plugin))
         if desc != None:
             match = re_header_version.search(desc)
@@ -79,6 +77,7 @@ def get_version(plugin,data_dir = None):
     if desc_ver != None:
         desc_ver = format_version(desc_ver)
     return (file_ver, desc_ver)
+
 
 def format_version(ver):
     """convert something we think is a version number into a canonical form that can be used for comparison"""
@@ -92,7 +91,7 @@ def format_version(ver):
         v[i] = int(v[i])
     while len(v) < 3:
         v.append(0)
-    return("%05d.%05d.%05d.%s" % (v[0], v[1], v[2], alpha))
+    return ("%05d.%05d.%05d.%s" % (v[0], v[1], v[2], alpha))
 
 
 def plugin_description(plugin):
@@ -104,7 +103,7 @@ def plugin_description(plugin):
         return ""
     block = inp.read(4096)
     inp.close()
-    if block[0:4] == b"TES3":    # Morrowind
+    if block[0:4] == b"TES3":  # Morrowind
         if len(block) < tes3_min_plugin_size:
             parse_logger.warning("Cannot read plugin description(%s): file too short, returning NULL string", plugin)
             return ""
@@ -157,28 +156,28 @@ class rule_parser:
         It also strips comments.
         """
         if self.input_handle == None:
-            return(False)
+            return (False)
         try:
             while True:
                 line = next(self.input_handle)
                 self.bytesread += len(line)
                 self.line_num += 1
-                line = re_comment.sub('', line) # remove comments
-                line = line.rstrip() # strip whitespace from end of line, include CRLF
+                line = re_comment.sub('', line)  # remove comments
+                line = line.rstrip()  # strip whitespace from end of line, include CRLF
                 if line != "":
                     self.buffer = line
                     parse_logger.debug("readline returns: %s" % line)
-                    return(True)
+                    return (True)
         except StopIteration:
             parse_logger.debug("EOF")
             self.buffer = ""
             self.input_handle.close()
             self.input_handle = None
-            return(False)
+            return (False)
 
     def _where(self):
         """Convenience function letting the caller know at what point in the rule file something happened."""
-        return("%s:%d" % (self.rule_file, self.line_num))
+        return ("%s:%d" % (self.rule_file, self.line_num))
 
     def _parse_error(self, what):
         """print a message about current parsing error, and blow away the
@@ -207,8 +206,8 @@ class rule_parser:
             parse_logger.debug("expand_filename name has METAVER: %s" % pat)
             pat = re_plugin_metaver.sub(plugin_version, pat)
             subbed = True
-        if not subbed:        # no expansions made
-            return([plugin] if plugin.lower() in self.plugin_list else [])
+        if not subbed:  # no expansions made
+            return ([plugin] if plugin.lower() in self.plugin_list else [])
         parse_logger.debug("expand_filename new RE pat: %s" % pat)
         matches = []
         re_namepat = re.compile(pat, re.IGNORECASE)
@@ -216,7 +215,7 @@ class rule_parser:
             if re_namepat.match(p):
                 matches.append(p)
                 parse_logger.debug("expand_filename: %s expands to: %s" % (plugin, p))
-        return(matches)
+        return (matches)
 
     def _parse_plugin_name(self):
         self.parse_dbg_indent += "  "
@@ -234,13 +233,13 @@ class rule_parser:
                 parse_logger.debug("parse_plugin_name new name=%s" % plugin_name)
                 if len(matches) > 0:
                     self.buffer = " ".join(matches) + " " + self.buffer
-                return(True, plugin_name)
+                return (True, plugin_name)
             self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-            return(False, plugin_name)
+            return (False, plugin_name)
         else:
             self._parse_error("expected a plugin name")
             self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-            return(None, None)
+            return (None, None)
 
     def _parse_ordering(self, rule):
         self.parse_dbg_indent += "  "
@@ -268,7 +267,8 @@ class rule_parser:
             if n_order == 0:
                 parse_logger.warning("%s: ORDER rule has no entries" % (self._where()))
             elif n_order == 1:
-                parse_logger.warning("%s: ORDER rule skipped because it only has one entry: %s" % (self._where(), self.name_converter.truename(prev)))
+                parse_logger.warning("%s: ORDER rule skipped because it only has one entry: %s" % (
+                self._where(), self.name_converter.truename(prev)))
 
     def _parse_ver(self):
         self.parse_dbg_indent += "  "
@@ -280,7 +280,7 @@ class rule_parser:
             op = match.group(1)
             if op not in version_operators:
                 self._parse_error("Invalid [VER] operator")
-                return(None, None)
+                return (None, None)
             orig_ver = match.group(2)
             ver = format_version(orig_ver)
             plugin_name = match.group(3)
@@ -292,17 +292,17 @@ class rule_parser:
             elif expanded == []:
                 parse_logger.debug("parse_ver [VER] \"%s\" not active" % plugin_name)
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(False, expr) # file does not exist
+                return (False, expr)  # file does not exist
             if self.datadir == None:
                 # this case is reached when doing fromfile checks
                 # and we do not have the actual plugin to check, so
                 # we assume that the plugin matches the given version
                 if op == '=':
                     self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                    return(True, expr)
+                    return (True, expr)
                 else:
                     self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                    return(False, expr)
+                    return (False, expr)
             for xp in expanded:
                 plugin = self.name_converter.cname(xp)
                 plugin_t = self.name_converter.truename(plugin)
@@ -320,7 +320,7 @@ class rule_parser:
                         parse_logger.debug("parse_ver (filename) version(%s) = %s (%s)" % (plugin_t, p_ver_orig, p_ver))
                     else:
                         parse_logger.debug("parse_ver no version for %s" % plugin_t)
-                        return(False, expr)
+                        return (False, expr)
                 parse_logger.debug("parse_ver compare  p_ver=%s %s ver=%s" % (p_ver, op, ver))
                 result = True
                 if op == '=':
@@ -331,12 +331,12 @@ class rule_parser:
                     result = (p_ver > ver)
                 if result:
                     self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                    return(True, "[VER %s %s %s]" % (op, orig_ver, plugin))
+                    return (True, "[VER %s %s %s]" % (op, orig_ver, plugin))
             self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-            return(False, expr)
+            return (False, expr)
         self.parse_dbg_indent = self.parse_dbg_indent[:-2]
         self._parse_error("Invalid [VER] function")
-        return(None, None)
+        return (None, None)
 
     def _parse_desc(self):
         """match patterns against the description string in the plugin header."""
@@ -346,7 +346,7 @@ class rule_parser:
             p = match.span(0)[1]
             self.buffer = self.buffer[p:]
             parse_logger.debug("parse_desc new buffer = %s" % self.buffer)
-            bang = match.group(1) # means to invert the meaning of the match
+            bang = match.group(1)  # means to invert the meaning of the match
             pat = match.group(2)
             plugin_name = match.group(3)
             expr = "[DESC %s/%s/ %s]" % (bang, pat, plugin_name)
@@ -357,14 +357,14 @@ class rule_parser:
             elif expanded == []:
                 parse_logger.debug("parse_desc [DESC] \"%s\" not active" % plugin_name)
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(False, expr) # file does not exist
+                return (False, expr)  # file does not exist
             if self.datadir == None:
                 # this case is reached when doing fromfile checks,
                 # which do not have access to the actual plugin, so we
                 # always assume the test is merely for file existence,
                 # to err on the side of caution
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(True, expr)
+                return (True, expr)
             for xp in expanded:
                 plugin = self.name_converter.cname(xp)
                 plugin_t = self.name_converter.truename(plugin)
@@ -375,12 +375,12 @@ class rule_parser:
                 parse_logger.debug("parse_desc [DESC] returning: (%s, %s)" % (bool, expr))
                 if bool:
                     self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                    return(True, "[DESC %s/%s/ %s]" % (bang, pat, plugin_t))
+                    return (True, "[DESC %s/%s/ %s]" % (bang, pat, plugin_t))
             self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-            return(False, expr)
+            return (False, expr)
         self.parse_dbg_indent = self.parse_dbg_indent[:-2]
         self._parse_error("Invalid [DESC] function")
-        return(None, None)
+        return (None, None)
 
     def _parse_size(self):
         """check the given size of the plugin."""
@@ -390,7 +390,7 @@ class rule_parser:
             p = match.span(0)[1]
             self.buffer = self.buffer[p:]
             parse_logger.debug("parse_size new buffer = %s" % self.buffer)
-            bang = match.group(1) # means "is not this size"
+            bang = match.group(1)  # means "is not this size"
             wanted_size = int(match.group(2))
             plugin_name = match.group(3)
             expr = "[SIZE %s%d %s]" % (bang, wanted_size, plugin_name)
@@ -401,14 +401,14 @@ class rule_parser:
             elif expanded == []:
                 parse_logger.debug("parse_size [SIZE] \"%s\" not active" % match.group(3))
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(False, expr) # file does not exist
+                return (False, expr)  # file does not exist
             if self.datadir == None:
                 # this case is reached when doing fromfile checks,
                 # which do not have access to the actual plugin, so we
                 # always assume the test is merely for file existence,
                 # to err on the side of caution
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(True, expr)
+                return (True, expr)
             for xp in expanded:
                 plugin = self.name_converter.cname(xp)
                 plugin_t = self.name_converter.truename(plugin)
@@ -419,12 +419,12 @@ class rule_parser:
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
                 if bool:
                     self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                    return(True, "[SIZE %s%d %s]" % (bang, wanted_size, plugin_t))
+                    return (True, "[SIZE %s%d %s]" % (bang, wanted_size, plugin_t))
             self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-            return(False, expr)
+            return (False, expr)
         self.parse_dbg_indent = self.parse_dbg_indent[:-2]
         self._parse_error("Invalid [SIZE] function")
-        return(None, None)
+        return (None, None)
 
     def _parse_expression(self, prune=False):
         self.parse_dbg_indent += "  "
@@ -434,12 +434,12 @@ class rule_parser:
                 if re_rule.match(self.buffer):
                     parse_logger.debug("parse_expression new line started new rule, returning None")
                     self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                    return(None, None)
+                    return (None, None)
                 self.buffer = self.buffer.strip()
             else:
                 parse_logger.debug("parse_expression EOF, returning None")
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(None, None)
+                return (None, None)
         parse_logger.debug("parse_expression, start buffer: \"%s\"" % self.buffer)
         match = re_fun.match(self.buffer)
         if match:
@@ -447,15 +447,15 @@ class rule_parser:
             if fun == "DESC":
                 parse_logger.debug("parse_expression calling parse_desc()")
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(self._parse_desc())
+                return (self._parse_desc())
             elif fun == "VER":
                 parse_logger.debug("parse_expression calling parse_ver()")
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(self._parse_ver())
+                return (self._parse_ver())
             elif fun == "SIZE":
                 parse_logger.debug("parse_expression calling parse_size()")
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(self._parse_size())
+                return (self._parse_size())
             # otherwise it's a boolean function ...
             parse_logger.debug("parse_expression parsing expression: \"%s\"" % self.buffer)
             p = match.span(0)[1]
@@ -469,7 +469,7 @@ class rule_parser:
                 (bool, expr) = self._parse_expression(prune)
                 if bool == None:
                     self._parse_error("[%s] Invalid boolean arguments" % fun)
-                    return(None, None)
+                    return (None, None)
                 exprs.append(expr)
                 vals.append(bool)
                 parse_logger.debug("self.buffer 2 =\"%s\"" % self.buffer)
@@ -479,34 +479,34 @@ class rule_parser:
             parse_logger.debug("self.buffer 3 =\"%s\"" % self.buffer)
             if fun == "ALL":
                 # prune out uninteresting expressions from ANY results
-                exprs = [e for e in exprs if not(isinstance(e, list) and e == [])]
+                exprs = [e for e in exprs if not (isinstance(e, list) and e == [])]
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(all(vals), exprs[0] if len(exprs) == 1 else ["ALL"] + exprs)
+                return (all(vals), exprs[0] if len(exprs) == 1 else ["ALL"] + exprs)
             if fun == "ANY":
                 # prune out uninteresting expressions from ANY results
                 if prune:
-                    exprs = [e for e in exprs if not(isinstance(e, str) and e[0:8] == "MISSING(")]
+                    exprs = [e for e in exprs if not (isinstance(e, str) and e[0:8] == "MISSING(")]
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(any(vals), exprs[0] if len(exprs) == 1 else ["ANY"] + exprs)
+                return (any(vals), exprs[0] if len(exprs) == 1 else ["ANY"] + exprs)
             if fun == "NOT":
                 self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-                return(not(all(vals)), ["NOT"] + exprs)
+                return (not (all(vals)), ["NOT"] + exprs)
             else:
                 # should not be reached due to match on re_fun
                 self._parse_error("Expected Boolean function (ALL, ANY, NOT)")
-                return(None, None)
+                return (None, None)
             parse_logger.debug("parse_expression NOTREACHED")
         else:
             if re_fun.match(self.buffer):
                 self._parse_error("Invalid function expression")
-                return(None, None)
+                return (None, None)
             parse_logger.debug("parse_expression parsing plugin: \"%s\"" % self.buffer)
             (exists, p) = self._parse_plugin_name()
             if exists != None and p != None:
                 p = self.name_converter.truename(p) if exists else ("MISSING(%s)" % self.name_converter.truename(p))
             self.parse_dbg_indent = self.parse_dbg_indent[:-2]
-            return(exists, p)
+            return (exists, p)
         parse_logger.debug("parse_expression NOTREACHED(2)")
 
     def _pprint(self, expr, prefix):
@@ -515,17 +515,17 @@ class rule_parser:
         formatted = re_notstr.sub("NOT", formatted)
         formatted = re_anystr.sub("ANY", formatted)
         formatted = re_allstr.sub("ALL", formatted)
-        return(re_indented.sub(prefix, formatted))
+        return (re_indented.sub(prefix, formatted))
 
-    #Remove the missing plugins from the 'ANY' expression
-    def _prune_any(self,item):
-        #Don't operate on simple strings
-        if isinstance(item,list) == False:
+    # Remove the missing plugins from the 'ANY' expression
+    def _prune_any(self, item):
+        # Don't operate on simple strings
+        if isinstance(item, list) == False:
             return item
-        #Recursive search to make sure we get any nested expressions
-        for i in range(0,len(item)):
+        # Recursive search to make sure we get any nested expressions
+        for i in range(0, len(item)):
             item[i] = self._prune_any(item[i])
-        #Prune all the missing plugins
+        # Prune all the missing plugins
         if item[0] == 'ANY':
             return filter(lambda x: x.find('MISSING(') == -1, item)
         return item
@@ -546,7 +546,7 @@ class rule_parser:
                 return
         else:
             self.buffer = expr
-        msg = "" if self.message == [] else " |" + "\n |".join(self.message) # no ending LF
+        msg = "" if self.message == [] else " |" + "\n |".join(self.message)  # no ending LF
         if rule == "CONFLICT":  # takes any number of exprs
             exprs = []
             parse_logger.debug("before conflict parse_expr() expr=%s line=%s" % (expr, self.buffer))
@@ -563,7 +563,7 @@ class rule_parser:
                     print(self._pprint(self._prune_any(e), " > "), file=self.out_stream)
                 if msg != "":
                     print(msg, file=self.out_stream)
-        elif rule == "NOTE":    # takes any number of exprs
+        elif rule == "NOTE":  # takes any number of exprs
             parse_logger.debug("function NOTE: %s" % msg)
             exprs = []
             (bool, expr) = self._parse_expression(prune=True)
@@ -577,7 +577,7 @@ class rule_parser:
                     print(self._pprint(e, " > "), file=self.out_stream)
                 if msg != "":
                     print(msg, file=self.out_stream)
-        elif rule == "PATCH":   # takes 2 exprs
+        elif rule == "PATCH":  # takes 2 exprs
             (bool1, expr1) = self._parse_expression()
             if bool1 == None:
                 parse_logger.warning("%s: PATCH rule invalid first expression" % (self._where()))
@@ -595,10 +595,11 @@ class rule_parser:
                     print(msg, file=self.out_stream)
             if bool2 and not bool1:
                 # case where the patch is missing for the thing to be patched
-                print("[PATCH]\n%s for:\n%s\n" % (self._pprint(expr1, " !!"), self._pprint(expr2, " ")), file=self.out_stream)
+                print("[PATCH]\n%s for:\n%s\n" % (self._pprint(expr1, " !!"), self._pprint(expr2, " ")),
+                      file=self.out_stream)
                 if msg != "":
                     print(msg, file=self.out_stream)
-        elif rule == "REQUIRES": # takes 2 exprs
+        elif rule == "REQUIRES":  # takes 2 exprs
             (bool1, expr1) = self._parse_expression(prune=True)
             if bool1 == None:
                 parse_logger.warning("%s: REQUIRES rule invalid first expression" % (self._where()))
@@ -620,7 +621,7 @@ class rule_parser:
         self.parse_dbg_indent = self.parse_dbg_indent[:-2]
         parse_logger.debug("parse_statement RETURNING")
 
-    def read_rules(self, rule_file, progress = None):
+    def read_rules(self, rule_file, progress=None):
         """Read rules from rule files (e.g., mlox_user.txt or mlox_base.txt),
         add order rules to graph, and print warnings."""
         n_rules = 0
@@ -639,22 +640,22 @@ class rule_parser:
             if self.buffer == "":
                 if not self._readline():
                     break
-            #Update the GUI progress bar
+            # Update the GUI progress bar
             if progress != None and inputsize > 0:
-                pct = int(100*self.bytesread/inputsize)
+                pct = int(100 * self.bytesread / inputsize)
                 if pct < 100:
                     progress.Update(pct, "Loading: {0}".format(self.rule_file))
             self.parse_dbg_indent = ""
             self.curr_rule = ""
             new_rule = re_rule.match(self.buffer)
-            if new_rule:        # start a new rule
+            if new_rule:  # start a new rule
                 n_rules += 1
                 self.curr_rule = new_rule.group(1).upper()
                 self.message = []
                 if self.curr_rule == "VERSION":
                     self.buffer = ""
-                    self.version= new_rule.group(2)
-                    parse_logger.info("\"{0}\" Version {1}".format(os.path.basename(self.rule_file),self.version))
+                    self.version = new_rule.group(2)
+                    parse_logger.info("\"{0}\" Version {1}".format(os.path.basename(self.rule_file), self.version))
                 elif self.curr_rule in ("ORDER", "NEAREND", "NEARSTART"):
                     self._parse_ordering(self.curr_rule)
                 elif self.curr_rule in ("CONFLICT", "NOTE", "PATCH", "REQUIRES"):

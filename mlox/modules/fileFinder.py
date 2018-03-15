@@ -40,7 +40,7 @@ class caseless_dirlist:
         self.files = {}
         if dir == None:
             return
-        if isinstance(dir,caseless_dirlist):
+        if isinstance(dir, caseless_dirlist):
             self.dir = dir.dirpath()
         else:
             self.dir = os.path.normpath(os.path.abspath(dir))

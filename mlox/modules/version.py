@@ -1,7 +1,7 @@
-
 import os
 import sys
 import locale
+
 Version = "0.62"
 
 
@@ -35,7 +35,7 @@ def version_info():
 
     try:
         from appdirs import __version_info__ as appdirs_version
-        output += "appdirs Version: {0}\n".format(".".join(list(map(str,appdirs_version))))
+        output += "appdirs Version: {0}\n".format(".".join(list(map(str, appdirs_version))))
     except ImportError:
         output += "appdirs Not Installed!\n"
 
@@ -46,6 +46,7 @@ def version_info():
         output += "libarchive Not Installed!\n"
 
     return output
+
 
 def full_version():
     return "{0} {1}".format(os.path.basename(sys.argv[0]), Version)

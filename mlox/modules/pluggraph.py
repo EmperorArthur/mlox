@@ -3,8 +3,10 @@ import logging
 
 pluggraph_logger = logging.getLogger('mlox.pluggraph')
 
+
 class pluggraph:
     """A graph structure built from ordering rules which specify plugin load (partial) order"""
+
     def __init__(self):
         # nodes is a dictionary of lists, where each key is a plugin, and each
         # value is a list of the children of that plugin in the graph
@@ -31,11 +33,11 @@ class pluggraph:
         while stack != []:
             p = stack.pop()
             if p == plugin:
-                return(True)
+                return (True)
             seen[p] = True
             if p in self.nodes:
                 stack.extend([child for child in self.nodes[p] if not child in seen])
-        return(False)
+        return (False)
 
     def add_edge(self, where, plug1, plug2):
         """Add an edge to our graph connecting plug1 to plug2, which means
@@ -60,14 +62,14 @@ class pluggraph:
                 pluggraph_logger.warning(cycle_detected)
             return False
         self.nodes.setdefault(plug1, [])
-        if plug2 in self.nodes[plug1]: # edge already exists
+        if plug2 in self.nodes[plug1]:  # edge already exists
             pluggraph_logger.debug("%s: Not adding duplicate Edge: \"%s\" -> \"%s\"", where, plug1, plug2)
             return True
         # add plug2 to the graph as a child of plug1
         self.nodes[plug1].append(plug2)
         self.incoming_count[plug2] = self.incoming_count.setdefault(plug2, 0) + 1
         pluggraph_logger.debug("adding edge: %s -> %s" % (plug1, plug2))
-        return(True)
+        return (True)
 
     def get_dot_graph(self):
         """
@@ -78,7 +80,7 @@ class pluggraph:
         buffer = "digraph plugins {\n"
         for (node, plugins) in self.nodes.items():
             for a_plugin in plugins:
-                buffer += "\""+ node + "\" -> \"" + a_plugin + "\"\n"
+                buffer += "\"" + node + "\" -> \"" + a_plugin + "\"\n"
         buffer += "}\n"
         return buffer
 
@@ -92,6 +94,7 @@ class pluggraph:
         output += "Child plugins are indented with respect to their parents\n"
         output += "Lines beginning with '=' are plugins you don't have.\n"
         output += "Lines beginning with '+' are plugins you do have.\n"
+
         def explain_rec(indent, n):
             output = ""
             if n in seen:
@@ -103,6 +106,7 @@ class pluggraph:
                     output += "%s%s\n" % (prefix, child)
                     explain_rec(" " + indent, child)
             return output
+
         output += explain_rec(" ", what.lower())
         return output
 
@@ -122,7 +126,7 @@ class pluggraph:
                     else:
                         leftover.append(r)
                 roots = leftover
-            return(removed, roots)
+            return (removed, roots)
 
         # find the roots of the graph
         roots = [node for node in self.nodes if self.incoming_count.get(node, 0) == 0]
@@ -133,7 +137,7 @@ class pluggraph:
         if len(roots) > 0:
             # use the nearstart information to pull preferred plugins to top of load order
             (top_roots, roots) = remove_roots(roots, self.nearstart)
-            bottom_roots = roots        # any leftovers go at the end
+            bottom_roots = roots  # any leftovers go at the end
             roots = top_roots + bottom_roots
             pluggraph_logger.debug("nearstart:\n  %s" % ("\n  ".join(self.nearstart)))
             pluggraph_logger.debug("top roots:\n  %s" % ("\n  ".join(top_roots)))
